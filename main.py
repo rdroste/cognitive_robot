@@ -55,8 +55,8 @@ if __name__ == '__main__':
             #print currTime - initTime
         # Evaluate the board
 
-       # ret, frame = cap.read()
-
+        ret, frame = cap.read()
+        # frame = cv2.imread("/home/david/Pictures/pic.png")
         frame = frame[250:350, 230:470]
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         score = peg.assessRoutine(initImg, currImg, rectList)
