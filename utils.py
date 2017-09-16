@@ -1,7 +1,7 @@
 # https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
 
 import cv2
-import http.client, urllib.request, urllib.parse, urllib.error, base64, sys, json
+import httplib, urllib, base64, sys, json
 import operator
 
 # Captures a single image from the camera and returns it in PIL format
@@ -39,11 +39,11 @@ def get_emotion(filepath, api_key):
         headers = {'Content-Type': 'application/octet-stream', 
                'Ocp-Apim-Subscription-Key': api_key}
 
-        params = urllib.parse.urlencode({})
+        params = urllib.urlencode({})
 
         body = open(filepath,'rb').read()
 
-        conn = http.client.HTTPSConnection('westus.api.cognitive.microsoft.com')
+        conn = httplib.HTTPSConnection('westus.api.cognitive.microsoft.com')
         conn.request("POST", "/emotion/v1.0/recognize?%s" % params, body, headers)
 
         response = conn.getresponse()
