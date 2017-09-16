@@ -50,21 +50,21 @@ if __name__ == '__main__':
     roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
     ref_n_frames = 3
     sos_n_frames = 16
-    ssos_train = 5
-    ssos_thr_factor = 20
+    asos_train = 5
+    asos_thr_factor = 20
     coin_thr = 60
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
-    ssos_array = np.zeros(ssos_train)
+    asos_array = np.zeros(asos_train)
     reference = np.zeros(roi_size)
     ref_frames = np.zeros((roi_size[0], roi_size[1], ref_n_frames))
     sos_array = np.zeros(sos_n_frames)
 
     roi_counter = 0
     frame_counter = 0
-    ssos_train_counter = 0
+    asos_train_counter = 0
     coin_frame = -1000
-    ssos_thr = 0
+    asos_thr = 0
     coin_counter = 0
 
     # Throw away the first frames
@@ -100,14 +100,18 @@ if __name__ == '__main__':
 
                 # If the SOS array is full, compute the average
                 if roi_counter % sos_n_frames == sos_n_frames - 1:
-                    ssos = np.sum(sos_array)
-                    if ssos_train_counter < ssos_train:
-                        ssos_array[ssos_train_counter] = ssos
-                        if ssos_train_counter == ssos_train - 1:
-                            ssos_thr = ssos_thr_factor * np.mean(ssos_array)
-                        ssos_train_counter = ssos_train_counter + 1
+                    asos = np.mean(sos_array)
+
+                    # Compute a few average SOS to set the threshold
+                    if asos_train_counter < asos_train:
+                        asos_array[asos_train_counter] = asos
+                        if asos_train_counter == asos_train - 1:
+                            asos_thr = asos_thr_factor * np.mean(asos_array)
+                        asos_train_counter = asos_train_counter + 1
+
+                    # Check if asos threshold is exceeded
                     else:
-                        if ssos > ssos_thr:
+                        if asos > asos_thr:
                             coin_counter = coin_counter + 1
                             print (coin_counter)
                             if coin_counter == nCoins:
