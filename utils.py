@@ -38,8 +38,6 @@ def close_camera(camera):
 # get emotions
 def get_emotion(filepath, api_key):
 
-    print("here")
-
     headers = {'Content-Type': 'application/octet-stream',
            'Ocp-Apim-Subscription-Key': api_key}
 
@@ -57,7 +55,6 @@ def get_emotion(filepath, api_key):
     # POS : anger, contempt, disgust, fear, sadness
     # NEG : happiness, neutral, surprise
     emotions = json_data[0]['scores']
-    # print(emotions)
 
     # print(emotions)
     main_emotion = max(emotions, key=lambda key: emotions[key])
