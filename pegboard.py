@@ -11,8 +11,16 @@ def initPegboard(initImg):
 
     myList = []
 
-    ret, thresh = cv2.threshold(dst, 145, 255, 0)
+    # Everything higher than the threshold is set to white
+    threshold = 100
+    ret, thresh = cv2.threshold(initImg, threshold, 255, 0)
     _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    print len(contours0)
+    cv2.drawContours(initImg, contours0, -1, (0, 255, 0), 2)
+    cv2.imshow('contours', initImg)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
     for i in range(6):
         x, y, w, h = cv2.boundingRect(contours0[i])
@@ -43,10 +51,9 @@ if __name__ == '__main__':
 
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    cv2.imshow('contours', img)
+    initPegboard(img.copy())
 
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+
 
     # rectPosList = initPegboard(img.copy())
 
