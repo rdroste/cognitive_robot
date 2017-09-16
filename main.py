@@ -5,10 +5,12 @@ import pegboard as peg
 import utils
 import multiprocessing as mp
 
-DEBUG = False
+DEBUG = True
 
+time_thr_pegs = 20
+time_thr_coins = 20 # seconds
 nCoins = 3
-emotion_analysis_skip_frames = 10
+emotion_analysis_skip_frames = 20
 filepath = './image.png'
 emotion_key = os.environ['MICROSOFT_EMOTION']
 
@@ -50,15 +52,15 @@ def main():
     mp_counter = 0
     r = []
     p = mp.Pool()
+    init_time = time.time()
     while expRunning:
         ret, frame = cap.read()
-        if not ret:
+        if not ret or time.time() - init_time > time_thr_pegs:
             expRunning = False
             continue
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         if frame_counter % emotion_analysis_skip_frames == 0:
-
             utils.save_image(currImg)
             r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
             mp_counter = mp_counter + 1
@@ -76,8 +78,9 @@ def main():
             emotion_nr_pegs[i], emotion_certainty_pegs[i] = r[i].get()
         except:
             emotion_nr_pegs[i], emotion_certainty_pegs[i] = 0, 0
-    p.close()
-    p.join()
+    # p.close()
+    # p.join()
+    cv2.waitKey(1000)
     print(emotion_nr_pegs)
     print(emotion_certainty_pegs)
 
@@ -103,7 +106,6 @@ def main():
     asos_train = 4
     asos_thr_factor = 5
     coin_thr = 20
-    time_thr_coins = 20 # seconds
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
     asos_array = np.zeros(asos_train)
@@ -119,8 +121,8 @@ def main():
     asos_thr = 0
     coin_counter = 0
     mp_counter = 0
-    r = []
-    p = mp.Pool()
+    r2 = []
+    p2 = mp.Pool()
     # r = p.apply_async(utils.get_emotion, args=(filepath, emotion_key))
 
     init_time = time.time()
@@ -133,11 +135,8 @@ def main():
     expRunning = True
     while expRunning:
 
-        if time.time() - init_time > time_thr_coins:
-            break
-
         ret, frame = cap.read()
-        if not ret:
+        if not ret or time.time() - init_time > time_thr_coins:
             expRunning = False
             continue
 
@@ -148,7 +147,8 @@ def main():
         # Emotion analysis
         if frame_counter % emotion_analysis_skip_frames == 0:
             utils.save_image(img)
-            r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
+            # r2.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
+            r2.append(p2.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
             mp_counter = mp_counter + 1
 
         # Detect coin in ROI
@@ -204,11 +204,11 @@ def main():
     emotion_certainty_coins = np.zeros(mp_counter)
     for i in range(mp_counter):
         try:
-            emotion_nr_coins[i], emotion_certainty_coins[i] = r[i].get()
+            emotion_nr_coins[i], emotion_certainty_coins[i] = r2[i].get()
         except:
             emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
-    p.close()
-    p.join()
+    # p2.close()
+    # p2.join()
 
     print(coin_times)
     print(emotion_nr_coins)
