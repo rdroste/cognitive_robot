@@ -35,6 +35,8 @@ def close_camera(camera):
 # get emotions
 def get_emotion(filepath, api_key):
 
+    print('here')
+
     try:
         headers = {'Content-Type': 'application/octet-stream', 
                'Ocp-Apim-Subscription-Key': api_key}
@@ -59,12 +61,20 @@ def get_emotion(filepath, api_key):
 
         conn.close()
 
-        return main_emotion, emotions[main_emotion]
+        if main_emotion == 'neutral':
+            main_emotion_nr = 1
+        elif main_emotion == 'happy':
+            main_emotion_nr = 2
+        else:
+            main_emotion_nr = 0
+        print(main_emotion)
+
+        return main_emotion_nr, emotions[main_emotion]
 
     except Exception as e:
-        print(e.args)
-        return 'Error', 'NA'
-
+        # print(e.args)
+        # return 'Error', 'NA'
+        return 0, [], []
 
 
 
