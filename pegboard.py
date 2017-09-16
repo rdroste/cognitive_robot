@@ -16,56 +16,37 @@ def initPegboard(initImg):
     ret, thresh = cv2.threshold(initImg, threshold, 255, 0)
     _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    print len(contours0)
-    cv2.drawContours(initImg, contours0, -1, (0, 255, 0), 2)
-    cv2.imshow('contours', initImg)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+    # Min and Max area for the rectangles
+    minArea = 1000.0
+    maxArea = 15000.0
 
-    for i in range(6):
-        x, y, w, h = cv2.boundingRect(contours0[i])
-        myList.append((x, y, w, h))
-        # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    for i in range(len(contours0)): #range(6):
+        area = cv2.contourArea(contours0[i])
+        if (area > minArea) & (area < maxArea):
+            cv2.drawContours(initImg, contours0, i, color=255, thickness=-1)
+
+            # Access the image pixels and create a 1D numpy array then add to list
+            pts = np.where(initImg == 255)
+            myList.append(pts)
+
+            # x, y, w, h = cv2.boundingRect(contours0[i])
+            # myList.append((x, y, w, h))
+            #cv2.rectangle(initImg, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     return myList
 
 # Check if a rectangle is occupied by a peg
 #   Input: initImg, initial image of the board
-#   Input: rect, list containing x,y,w,h of the rectangle to consider
+#   Input: rect, list containing pixels of the rectangle to consider
 #   Input: currImg, current image to check for
 #   Output: List of rectangle coordinates of the pegboard hole positions
-def checkRectOccupancy(initImg, rect, currImg):
+def checkRectOccupancy(initImg, currImg, rect):
 
-    x = rect[0]
-    y = rect[1]
-    w = rect[2]
-    h = rect[3]
-    diffMat = initImg[y:y+h, x:x+w] - currImg[y:y+h, x:x+w]
+    diffMat = initImg[rect] - currImg[rect]
+    return cv2.sumElems(diffMat*diffMat)[0]
 
-    return cv2.sumElems(diffMat*diffMat)
+# Asses the routine
+def assessRoutine(initImg, currImg, rectList):
 
-if __name__ == '__main__':
-
-    cap = cv2.VideoCapture("peg.avi")
-    ret, frame = cap.read()
-
-    img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    initPegboard(img.copy())
-
-
-
-    # rectPosList = initPegboard(img.copy())
-
-    # ret, thresh = cv2.threshold(dst, 145, 255, 0)
-    # h, w = img.shape[:2]
-
-    # _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    #contours = [cv2.approxPolyDP(cnt, 3, True) for cnt in contours0]
-
-    # cv2.drawContours(frame, contours0, -1, (0, 255, 0), 2)
-
-    # cv2.imshow('contours', frame)
-
-    # cv2.waitKey()
-    # cv2.destroyAllWindows()
+    score = checkRectOccupancy(initImg, currImg, rectList[2])
+    return score
