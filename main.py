@@ -1,13 +1,22 @@
 import numpy as np
 import cv2
+import os
 import pegboard as peg
-import vision_coin
+import vision_coin, utils
+
+DEBUG = True
+
+nCoins = 3
+emotion_key = os.environ['MICROSOFT_EMOTION']
 
 # Main routine
 if __name__ == '__main__':
 
     # Initialize all the connections with yumi and the camera
-    cap = cv2.VideoCapture("peg.avi")
+    if DEBUG:
+        cap = cv2.VideoCapture("peg.avi")
+    else:
+        cap = utils.prepare_camera()
 
     # Yumi says hi and explains the experiment
 
@@ -40,7 +49,9 @@ if __name__ == '__main__':
         score = peg.assessRoutine(initImg, currImg, rectList)
 
     roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
-    results = vision_coin.run(3, roi_coords)
+    # results = vision_coin.run(3, roi_coords)
+    if DEBUG:
+        cap = cv2.VideoCapture("./coin_test_1.mp4")
 
     # Yumi explains the coin experiment
 
@@ -82,6 +93,9 @@ if __name__ == '__main__':
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Motion Tracking here...
+        # if frame_counter > 20 and frame_counter % 60:
+        #     utils.save_image(img, './tmp.png')
+        #     utils.get_emotion('./tmp.png', emotion_key)
 
         # Detect coin in ROI
         if frame_counter % 2 == 0:
@@ -119,13 +133,13 @@ if __name__ == '__main__':
                             sos_array = np.zeros(sos_n_frames)
                             coin_frame = frame_counter
 
-            cv2.imshow('image', roi)
-            cv2.waitKey(1)
-            roi_counter = roi_counter + 1
+            if DEBUG:
+                cv2.imshow('image', roi)
+                cv2.waitKey(1)
+                roi_counter = roi_counter + 1
 
         # Feed the image to sentiment analysis
 
         frame_counter = frame_counter + 1
 
-
-    cap.release()
+    utils.close_camera(cap)
