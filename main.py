@@ -33,8 +33,8 @@ if __name__ == '__main__':
 
         # 480, 640
         initImg = initImg[250:350, 230:470]
-        cv2.imshow('image', initImg)
-        cv2.waitKey()
+        # cv2.imshow('image', initImg)
+        # cv2.waitKey()
 
         rectList = peg.initPegboard(initImg.copy())
         expRunning = True
@@ -42,16 +42,20 @@ if __name__ == '__main__':
 
         # Yumi tells the person to do routine (and countdown maybe?)
 
-
+        initTime = time.time()
         while expRunning:
+            currTime = time.time()
             # Start facial/behavioral analysis with 10 sec timer
             ret, currImg = cap.read()
             # Feed the image to sentiment analysis
-
+            #if (currTime-initTime) > 16.0:
             expRunning = False
-
+            #cv2.waitKey(100)
+            #print currTime - initTime
         # Evaluate the board
-        ret, frame = cap.read()
+
+       # ret, frame = cap.read()
+
         frame = frame[250:350, 230:470]
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         score = peg.assessRoutine(initImg, currImg, rectList)
