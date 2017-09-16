@@ -35,7 +35,6 @@ def initPegboard(initImg):
             #cv2.rectangle(initImg, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     cv2.imshow('image', initImg)
-    cv2.waitKey()
     return myList
 
 # Check if a rectangle is occupied by a peg

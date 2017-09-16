@@ -35,9 +35,6 @@ def close_camera(camera):
 # get emotions
 def get_emotion(filepath, api_key):
 
-    # print('here')
-
-    # try:
     headers = {'Content-Type': 'application/octet-stream',
            'Ocp-Apim-Subscription-Key': api_key}
 
@@ -72,15 +69,8 @@ def get_emotion(filepath, api_key):
         main_emotion_nr = 0
 
     print(main_emotion)
-    print(emotions[main_emotion])
-    print(main_emotion_nr)
 
     return main_emotion_nr, emotions[main_emotion]
-
-    # except Exception as e:
-    #     print(e.args)
-    #     # return 'Error', 'NA'
-    #     return 0, 0
 
 
 
