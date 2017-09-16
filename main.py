@@ -1,20 +1,21 @@
 import numpy as np
 import cv2
-import os
+import os, time
 import pegboard as peg
-import vision_coin, utils
+import utils
+import multiprocessing as mp
 
 DEBUG = True
 
 nCoins = 3
-emotion_key = os.environ['MICROSOFT_EMOTION']
+# emotion_key = os.environ['MICROSOFT_EMOTION']
 
 # Main routine
 if __name__ == '__main__':
 
     # Initialize all the connections with yumi and the camera
     if DEBUG:
-        cap = cv2.VideoCapture("peg.avi")
+        cap = cv2.VideoCapture("peg_test.avi")
     else:
         cap = utils.prepare_camera()
 
@@ -28,7 +29,14 @@ if __name__ == '__main__':
     # Initialize the pegboard
     ret, frame = cap.read()
     if ret:
+
         initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # 480, 640
+        initImg = initImg[250:350, 230:470]
+        cv2.imshow('image', initImg)
+        cv2.waitKey()
+
         rectList = peg.initPegboard(initImg.copy())
         expRunning = True
         # Yumi shows the pegboard routine
@@ -45,31 +53,43 @@ if __name__ == '__main__':
 
         # Evaluate the board
         ret, frame = cap.read()
+        frame = frame[250:350, 230:470]
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         score = peg.assessRoutine(initImg, currImg, rectList)
+
 
     roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
     # results = vision_coin.run(3, roi_coords)
     if DEBUG:
-        cap = cv2.VideoCapture("./coin_test_1.mp4")
+        # cap = cv2.VideoCap    ture("./coin_test_1.mp4")
+        cap = cv2.VideoCapture("./coin_test_2.avi")
+
+    # ret, frame = cap.read()
+    # currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # cv2.imshow('image',currImg)
+    # cv2.waitKey()
 
     # Yumi explains the coin experiment
 
     # Start the experiment
 
     # Initialize test 2: The coin experiment
-    roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
-    ref_n_frames = 3
-    sos_n_frames = 16
-    asos_train = 5
-    asos_thr_factor = 20
-    coin_thr = 60
+    # roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
+    roi_coords = np.array([[282, 349], [219, 282]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
+    ref_n_frames = 2
+    sos_n_frames = 4
+    asos_train = 4
+    asos_thr_factor = 5
+    coin_thr = 20
+    time_thr_coins = 20 # seconds
+    filepath = './image.png'
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
     asos_array = np.zeros(asos_train)
     reference = np.zeros(roi_size)
     ref_frames = np.zeros((roi_size[0], roi_size[1], ref_n_frames))
     sos_array = np.zeros(sos_n_frames)
+    coin_times = np.zeros(nCoins)
 
     roi_counter = 0
     frame_counter = 0
@@ -77,6 +97,14 @@ if __name__ == '__main__':
     coin_frame = -1000
     asos_thr = 0
     coin_counter = 0
+    emotions = []
+    p = mp.Pool()
+    mp_counter = 0
+    r = []
+    # r = p.apply_async(utils.get_emotion, args=(filepath, emotion_key))
+
+    init_time = time.time()
+    this_init_time = init_time
 
     # Throw away the first frames
     for i in range(20):
@@ -84,6 +112,9 @@ if __name__ == '__main__':
 
     expRunning = True
     while expRunning:
+
+        if time.time() - init_time > time_thr_coins:
+            break
 
         ret, frame = cap.read()
         if not ret:
@@ -93,15 +124,19 @@ if __name__ == '__main__':
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Motion Tracking here...
-        # if frame_counter > 20 and frame_counter % 60:
-        #     utils.save_image(img, './tmp.png')
-        #     utils.get_emotion('./tmp.png', emotion_key)
+
+        # Emotion analysis
+        if frame_counter % 10 == 0:
+
+            utils.save_image(img)
+            r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
+            mp_counter = mp_counter + 1
 
         # Detect coin in ROI
         if frame_counter % 2 == 0:
             # Get roi and blur
             roi = img[roi_coords[0,0]:roi_coords[0,1], roi_coords[1,0]:roi_coords[1,1]]
-            roi = cv2.GaussianBlur(roi, (21, 21), 0)
+            roi = cv2.GaussianBlur(roi, (13, 13), 0)
 
             # Get frame for reference and update reference if necessary
             ref_frames[:,:, roi_counter % ref_n_frames] = roi
@@ -133,13 +168,34 @@ if __name__ == '__main__':
                             sos_array = np.zeros(sos_n_frames)
                             coin_frame = frame_counter
 
+                            # Add timer
+                            coin_times[coin_counter - 1] = time.time() - this_init_time
+                            this_init_time = time.time()
+
             if DEBUG:
-                cv2.imshow('image', roi)
-                cv2.waitKey(1)
+                cv2.imshow('image', img)
+                cv2.waitKey(120)
                 roi_counter = roi_counter + 1
 
         # Feed the image to sentiment analysis
 
         frame_counter = frame_counter + 1
+
+    emotion_nr = np.zeros(mp_counter)
+    emotion_certainty = np.zeros(mp_counter)
+    # print("r is ", len(r))
+    # print(mp_counter)
+    for i in range(mp_counter):
+        try:
+            emotion_nr[i], emotion_certainty[i] = r[i].get()
+        except:
+            emotion_nr[i], emotion_certainty[i] = 0, 0
+
+    p.close()
+    p.join()
+
+    print(coin_times)
+    print(emotion_nr)
+    print(emotion_certainty)
 
     utils.close_camera(cap)

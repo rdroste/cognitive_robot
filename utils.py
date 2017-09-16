@@ -38,36 +38,52 @@ def close_camera(camera):
 # get emotions
 def get_emotion(filepath, api_key):
 
-    try:
-        headers = {'Content-Type': 'application/octet-stream', 
-               'Ocp-Apim-Subscription-Key': api_key}
+    # print('here')
 
-        params = urllib.urlencode({})
+    # try:
+    headers = {'Content-Type': 'application/octet-stream',
+           'Ocp-Apim-Subscription-Key': api_key}
 
-        body = open(filepath,'rb').read()
+    params = urllib.urlencode({})
 
-        conn = httplib.HTTPSConnection('westus.api.cognitive.microsoft.com')
-        conn.request("POST", "/emotion/v1.0/recognize?%s" % params, body, headers)
+    body = open(filepath,'rb').read()
 
-        response = conn.getresponse()
-        data = response.read()
-        json_data = json.loads(data.decode('utf-8'))
+    conn = httplib.HTTPSConnection('westus.api.cognitive.microsoft.com')
+    conn.request("POST", "/emotion/v1.0/recognize?%s" % params, body, headers)
 
-        # POS : anger, contempt, disgust, fear, sadness
-        # NEG : happiness, neutral, surprise
-        emotions = json_data[0]['scores']
+    response = conn.getresponse()
+    data = response.read()
+    json_data = json.loads(data.decode('utf-8'))
 
-        # print(emotions)
-        main_emotion = max(emotions, key=lambda key: emotions[key])
+    # POS : anger, contempt, disgust, fear, sadness
+    # NEG : happiness, neutral, surprise
+    emotions = json_data[0]['scores']
 
-        conn.close()
+    # print(emotions)
+    main_emotion = max(emotions, key=lambda key: emotions[key])
 
-        return main_emotion, emotions[main_emotion]
+    conn.close()
 
-    except Exception as e:
-        print(e.args)
-        return 'Error', 'NA'
+    if (main_emotion == "anger" or main_emotion == "contempt" or main_emotion == "disgust" or main_emotion == "fear"
+        or main_emotion == "sadness"):
+        main_emotion_nr = 1
+    elif main_emotion == "neutral" or main_emotion == "surprise":
+        main_emotion_nr = 2
+    elif main_emotion == "happiness":
+        main_emotion_nr = 3
+    else:
+        main_emotion_nr = 0
 
+    print(main_emotion)
+    print(emotions[main_emotion])
+    print(main_emotion_nr)
+
+    return main_emotion_nr, emotions[main_emotion]
+
+    # except Exception as e:
+    #     print(e.args)
+    #     # return 'Error', 'NA'
+    #     return 0, 0
 
 
 
