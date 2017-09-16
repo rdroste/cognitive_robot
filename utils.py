@@ -38,8 +38,6 @@ def close_camera(camera):
 # get emotions
 def get_emotion(filepath, api_key):
 
-    print("here")
-
     headers = {'Content-Type': 'application/octet-stream',
            'Ocp-Apim-Subscription-Key': api_key}
 
@@ -56,8 +54,8 @@ def get_emotion(filepath, api_key):
 
     # POS : anger, contempt, disgust, fear, sadness
     # NEG : happiness, neutral, surprise
+    print(json_data)
     emotions = json_data[0]['scores']
-    # print(emotions)
 
     # print(emotions)
     main_emotion = max(emotions, key=lambda key: emotions[key])
@@ -77,6 +75,26 @@ def get_emotion(filepath, api_key):
     print(main_emotion)
 
     return main_emotion_nr, emotions[main_emotion]
+
+
+# text sentiment analysis
+def get_sentiment_score(text):
+
+    documents = {'documents': [{ 'id': '1', 'language': 'en', 'text': text}]}
+
+    accessKey = os.environ['MICROSOFT_TEXT']
+    uri = 'westeurope.api.cognitive.microsoft.com'
+    path = '/text/analytics/v2.0/sentiment'
+
+    headers = {'Ocp-Apim-Subscription-Key': accessKey}
+    conn = httplib.HTTPSConnection (uri)
+    body = json.dumps (documents)
+    conn.request ("POST", path, body, headers)
+    response = conn.getresponse ()
+    result = response.read()
+    data = json.loads(result)
+
+    return data['documents'][0]['score']
 
 
 

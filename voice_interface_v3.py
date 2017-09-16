@@ -1,14 +1,24 @@
+from __future__ import print_function
+import sounddevice as sd
+import soundfile as sf
+import os
+from utils import *
+from yumi_utils import *
+import time
 import numpy as np
 import cv2
-import os, time
 import pegboard as peg
-import utils
 import multiprocessing as mp
 
-DEBUG = True
+from bingtts import Translator
 
-time_thr_pegs = 20
-time_thr_coins = 20 # seconds
+# audio parameters
+SAMPLERATE = 16000
+NUMCHANNELS = 1
+
+# test/puzzle parameters
+time_thr_pegs = 8
+time_thr_coins = 10 # seconds
 nCoins = 3
 emotion_analysis_skip_frames = 20
 filepath = './image.png'
@@ -17,37 +27,93 @@ emotion_key = os.environ['MICROSOFT_EMOTION']
 
 def main():
 
-    # Initialize all the connections with yumi and the camera
-    if DEBUG:
-        cap = cv2.VideoCapture("peg_test.avi")
+    # prepare camera
+    cap = prepare_camera()
+
+    # initialize Microsoft ASR and Text2Speech
+    api_key = os.environ['MICROSOFT_VOICE']
+    ms_asr = Microsoft_ASR(api_key)
+    ms_asr.get_speech_token()
+    translator = Translator(api_key)
+
+
+    sd.default.samplerate = SAMPLERATE
+    sd.default.channels = NUMCHANNELS
+
+    # preload audio
+    hello_audio, _ = sf.read(os.path.join('audio','1_hello.wav'))
+    meet_audio, _ = sf.read(os.path.join('audio','2_happy_to_meet.wav'))
+    first_audio, _ = sf.read(os.path.join('audio','3_first_game_rules.wav'))
+    your_turn, _ = sf.read(os.path.join('audio','4_your_turn.wav'))
+    great_job, _ = sf.read(os.path.join('audio','5_great_job.wav'))
+    second_game, _ = sf.read(os.path.join('audio','6_second_game.wav'))
+    feedback, _ = sf.read(os.path.join('audio','7_feedback.wav'))
+    pos_resp, _ = sf.read(os.path.join('audio','8_pos_resp.wav'))
+    neg_resp, _ = sf.read(os.path.join('audio','8_neg_resp.wav'))
+
+    # greetings from Yumi
+    sd.play(hello_audio, SAMPLERATE, blocking=True)
+
+    # response with name
+    print("Starting to record...")
+    myrecording = sd.rec(3*SAMPLERATE, blocking=True)
+    print("Writing to WAV...")
+    sf.write('test.wav', myrecording, SAMPLERATE)
+    try:
+        text, confidence = ms_asr.transcribe('test.wav')
+        print("Text: ", text)
+        print("Confidence: ", confidence)
+    except:
+        print("Transcription failed :(")
+        confidence = 0
+    if confidence < 0.9:
+        got_name = True
+        # USE LUIS TO GET NAME!!!
     else:
-        cap = utils.prepare_camera()
+        got_name = False
 
-    # Yumi says hi and explains the experiment
+    # happy to meet you
+    sd.play(meet_audio, SAMPLERATE, blocking=True)
 
-    # Test 1: The pegboard experiment
+    # user response
+    print("Starting to record...")
+    myrecording = sd.rec(2*SAMPLERATE, blocking=True)
+    print("Writing to WAV...")
+    sf.write('test.wav', myrecording, SAMPLERATE)
+    try:
+        text, confidence = ms_asr.transcribe('test.wav')
+        print("Text: ", text)
+        print("Confidence: ", confidence)
+    except:
+        print("Transcription failed :(")
+        text = ''
+        confidence = 0
+    # check for yes with LUIS otherwise loop
 
-    # Yumi explains the pegboard experiment
+    # first game rules (peg board)
+    sd.play(first_audio, SAMPLERATE, blocking=True)
 
-    # Start the experiment
-    # Initialize the pegboard
+
+    # initialize pegboard CV
     ret, frame = cap.read()
     if not ret:
         print("Cannot open camera")
         return -1
-
     initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # 480, 640
     initImg = initImg[250:350, 230:470]
-
     rectList = peg.initPegboard(initImg.copy())
     expRunning = True
-    # Yumi shows the pegboard routine
 
-    # Yumi tells the person to do routine (and countdown maybe?)
 
-    # Emotion analysis
+    # ROBOT MOVE
+    # moveDoubleRobot('T_ROB_R','PegTest','T_ROB_L')
+    time.sleep(5)
+
+    #---------------------------------------------------------------
+
+    # user turn - PEG BOARD GAME
+    sd.play(your_turn, SAMPLERATE, blocking=True)
+    # time.sleep(15)
     frame_counter = 0
     emotion_frames = []
     init_time = time.time()
@@ -62,10 +128,6 @@ def main():
             emotion_frames.append(currImg)
         frame_counter = frame_counter + 1
 
-        if DEBUG:
-            cv2.imshow('image', currImg)
-            cv2.waitKey(20)
-
     mp_counter = len(emotion_frames)
     emotion_nr_pegs = np.zeros(mp_counter)
     emotion_certainty_pegs = np.zeros(mp_counter)
@@ -78,23 +140,26 @@ def main():
 
     print(emotion_nr_pegs)
     print(emotion_certainty_pegs)
+    print('Happiness score: ', np.dot(emotion_nr_pegs, emotion_certainty_pegs) )
 
     # Evaluate the board
     currImg = currImg[250:350, 230:470]
     score = peg.assessRoutine(initImg, currImg, rectList)
     print(score)
+    pegboard_score = np.mean(score[2:])
+    print(pegboard_score)
 
-    # results = vision_coin.run(3, roi_coords)
-    if DEBUG:
-        # cap = cv2.VideoCap    ture("./coin_test_1.mp4")
-        cap = cv2.VideoCapture("./coin_test_2.avi")
+    #-----------------------------------------------------------#
 
-    # Yumi explains the coin experiment
+    # great job
+    sd.play(great_job, SAMPLERATE, blocking=True)
+    # WITH NAME IF DETECTED!!
+    time.sleep(2)
 
-    # Start the experiment
+    # second game rules (coin test)
+    sd.play(second_game, SAMPLERATE, blocking=True)
 
-    # Initialize test 2: The coin experiment
-    # roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
+    # initialize coin game CV
     roi_coords = np.array([[282, 349], [219, 282]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
     ref_n_frames = 2
     sos_n_frames = 4
@@ -124,6 +189,17 @@ def main():
     # Throw away the first frames
     for i in range(20):
         cap.read()
+
+
+    # ROBOT MOVE
+    # moveSingleRobot('T_ROB_R','CoinTest')
+    time.sleep(5)
+
+    #-----------------------------------------------------------#
+
+    # user turn
+    sd.play(your_turn, SAMPLERATE, blocking=True)
+    # time.sleep(15)
 
     expRunning = True
     while expRunning:
@@ -183,10 +259,6 @@ def main():
 
             roi_counter = roi_counter + 1
 
-            if DEBUG:
-                cv2.imshow('image', img)
-                cv2.waitKey(120)
-
         # Feed the image to sentiment analysis
         frame_counter = frame_counter + 1
 
@@ -204,8 +276,45 @@ def main():
     print(emotion_nr_coins)
     print(emotion_certainty_coins)
 
+    print('Happiness score: ', np.dot(emotion_nr_coins, emotion_certainty_coins) )
+
     utils.close_camera(cap)
 
+    #-----------------------------------------------------------#
 
+    # robot asks feedback
+    sd.play(feedback, SAMPLERATE, blocking=True)
+    # WITH NAME IF DETECTED!!
+
+    # user response
+    print("Starting to record...")
+    myrecording = sd.rec(10*SAMPLERATE, blocking=True)
+    print("Writing to WAV...")
+    sf.write('test.wav', myrecording, SAMPLERATE)
+    try:
+        text, confidence = ms_asr.transcribe('test.wav')
+        print("Text: ", text)
+        print("Confidence: ", confidence)
+    except:
+        print("Transcription failed :(")
+        text = ''
+        confidence = 0
+
+    # sentiment analysis
+    sentiment_score = get_sentiment_score(text)
+    print("Sentiment score: ", sentiment_score)
+    # positive = True
+
+    # farewell
+    if sentiment_score > 0.5:
+        sd.play(pos_resp, SAMPLERATE, blocking=True)
+    else:
+        sd.play(neg_resp, SAMPLERATE, blocking=True)
+
+
+    
 if __name__ == '__main__':
     main()
+
+
+

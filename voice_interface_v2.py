@@ -3,6 +3,7 @@ import sounddevice as sd
 import soundfile as sf
 import os
 from utils import *
+from yumi_utils import *
 import time
 
 from bingtts import Translator
@@ -10,40 +11,6 @@ from bingtts import Translator
 SAMPLERATE = 16000
 NUMCHANNELS = 1
 DURATION = 10
-
-
-def speak_to_YuMi():
-
-    try:
-        print("Starting to record...")
-        myrecording = sd.rec(DURATION*SAMPLERATE, blocking=True)
-        print("Writing to WAV...")
-        sf.write('test.wav', myrecording, SAMPLERATE)
-    except:
-        print("Recording failed :(")
-        return
-
-    try:
-        text, confidence = ms_asr.transcribe('test.wav')
-        print("Text: ", text)
-        print("Confidence: ", confidence)
-    except:
-        print("Transcription failed :(")
-        return
-
-    # parse text
-    if 'coin' in text:
-        print("Doing the coin test...")
-    elif 'block' in text:
-        print("Doing the block test...")
-    elif 'bye' in text:
-        print("Waving to the audience...")
-    else:
-        print("I'm sorry, I didn't quite get that")
-
-
-    output = translator.speak("This is a text to speech translation", "en-US", "Female", "riff-16khz-16bit-mono-pcm")
-
 
 
 if __name__ == "__main__":
@@ -108,10 +75,11 @@ if __name__ == "__main__":
         confidence = 0
     # check for yes with LUIS otherwise loop
 
-    # first game rules
+    # first game rules (blocks)
     sd.play(first_audio, SAMPLERATE, blocking=True)
 
     # ROBOT MOVE
+    # moveDoubleRobot('T_ROB_R','PegTest','T_ROB_L')
     time.sleep(5)
 
     # user turn
@@ -123,10 +91,11 @@ if __name__ == "__main__":
     # WITH NAME IF DETECTED!!
     time.sleep(2)
 
-    # second game rules
+    # second game rules (coin test)
     sd.play(second_game, SAMPLERATE, blocking=True)
 
     # ROBOT MOVE
+    # moveSingleRobot('T_ROB_R','CoinTest')
     time.sleep(5)
 
     # user turn
@@ -150,11 +119,14 @@ if __name__ == "__main__":
         print("Transcription failed :(")
         text = ''
         confidence = 0
-    # SENTIMENT ANALYSIS
-    positive = True
+
+    # sentiment analysis
+    sentiment_score = get_sentiment_score(text)
+    print("Sentiment score: ", sentiment_score)
+    # positive = True
 
     # farewell
-    if positive:
+    if sentiment_score > 0.5:
         sd.play(pos_resp, SAMPLERATE, blocking=True)
     else:
         sd.play(neg_resp, SAMPLERATE, blocking=True)
