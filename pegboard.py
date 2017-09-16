@@ -34,6 +34,7 @@ def initPegboard(initImg):
 
             myList.append(pts)
 
+    cv2.imshow('image', initImg)
     return myList
 
 # Check if a rectangle is occupied by a peg
