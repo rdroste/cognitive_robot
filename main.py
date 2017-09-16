@@ -8,10 +8,12 @@ import multiprocessing as mp
 DEBUG = False
 
 nCoins = 3
-# emotion_key = os.environ['MICROSOFT_EMOTION']
+emotion_analysis_skip_frames = 10
+filepath = './image.png'
+emotion_key = os.environ['MICROSOFT_EMOTION']
 
-# Main routine
-if __name__ == '__main__':
+
+def main():
 
     # Initialize all the connections with yumi and the camera
     if DEBUG:
@@ -28,50 +30,66 @@ if __name__ == '__main__':
     # Start the experiment
     # Initialize the pegboard
     ret, frame = cap.read()
-    if ret:
+    if not ret:
+        print("Cannot open camera")
+        return -1
 
-        initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # 480, 640
-        initImg = initImg[250:350, 230:470]
-        # cv2.imshow('image', initImg)
-        # cv2.waitKey()
+    # 480, 640
+    initImg = initImg[250:350, 230:470]
 
-        rectList = peg.initPegboard(initImg.copy())
-        expRunning = True
-        # Yumi shows the pegboard routine
+    rectList = peg.initPegboard(initImg.copy())
+    expRunning = True
+    # Yumi shows the pegboard routine
 
-        # Yumi tells the person to do routine (and countdown maybe?)
+    # Yumi tells the person to do routine (and countdown maybe?)
 
-        initTime = time.time()
-        while expRunning:
-            currTime = time.time()
-            # Start facial/behavioral analysis with 10 sec timer
-            ret, currImg = cap.read()
-            # Feed the image to sentiment analysis
-            #if (currTime-initTime) > 16.0:
-            expRunning = False
-            #cv2.waitKey(100)
-            #print currTime - initTime
-        # Evaluate the board
-
+    # Emotion analysis
+    frame_counter = 0
+    mp_counter = 0
+    r = []
+    p = mp.Pool()
+    while expRunning:
         ret, frame = cap.read()
-        # frame = cv2.imread("/home/david/Pictures/pic.png")
-        frame = frame[250:350, 230:470]
+        if not ret:
+            expRunning = False
+            continue
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        score = peg.assessRoutine(initImg, currImg, rectList)
 
+        if frame_counter % emotion_analysis_skip_frames == 0:
 
-    roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
+            utils.save_image(currImg)
+            r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
+            mp_counter = mp_counter + 1
+
+        frame_counter = frame_counter + 1
+
+        if DEBUG:
+            cv2.imshow('image', currImg)
+            cv2.waitKey(20)
+
+    emotion_nr_pegs = np.zeros(mp_counter)
+    emotion_certainty_pegs = np.zeros(mp_counter)
+    for i in range(mp_counter):
+        try:
+            emotion_nr_pegs[i], emotion_certainty_pegs[i] = r[i].get()
+        except:
+            emotion_nr_pegs[i], emotion_certainty_pegs[i] = 0, 0
+    p.close()
+    p.join()
+    print(emotion_nr_pegs)
+    print(emotion_certainty_pegs)
+
+    # Evaluate the board
+    currImg = currImg[250:350, 230:470]
+    score = peg.assessRoutine(initImg, currImg, rectList)
+    print(score)
+
     # results = vision_coin.run(3, roi_coords)
     if DEBUG:
         # cap = cv2.VideoCap    ture("./coin_test_1.mp4")
         cap = cv2.VideoCapture("./coin_test_2.avi")
-
-    # ret, frame = cap.read()
-    # currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # cv2.imshow('image',currImg)
-    # cv2.waitKey()
 
     # Yumi explains the coin experiment
 
@@ -86,7 +104,6 @@ if __name__ == '__main__':
     asos_thr_factor = 5
     coin_thr = 20
     time_thr_coins = 20 # seconds
-    filepath = './image.png'
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
     asos_array = np.zeros(asos_train)
@@ -101,10 +118,9 @@ if __name__ == '__main__':
     coin_frame = -1000
     asos_thr = 0
     coin_counter = 0
-    emotions = []
-    p = mp.Pool()
     mp_counter = 0
     r = []
+    p = mp.Pool()
     # r = p.apply_async(utils.get_emotion, args=(filepath, emotion_key))
 
     init_time = time.time()
@@ -130,8 +146,7 @@ if __name__ == '__main__':
         # Motion Tracking here...
 
         # Emotion analysis
-        if frame_counter % 10 == 0:
-
+        if frame_counter % emotion_analysis_skip_frames == 0:
             utils.save_image(img)
             r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
             mp_counter = mp_counter + 1
@@ -176,30 +191,31 @@ if __name__ == '__main__':
                             coin_times[coin_counter - 1] = time.time() - this_init_time
                             this_init_time = time.time()
 
+            roi_counter = roi_counter + 1
+
             if DEBUG:
                 cv2.imshow('image', img)
                 cv2.waitKey(120)
-                roi_counter = roi_counter + 1
 
         # Feed the image to sentiment analysis
-
         frame_counter = frame_counter + 1
 
-    emotion_nr = np.zeros(mp_counter)
-    emotion_certainty = np.zeros(mp_counter)
-    # print("r is ", len(r))
-    # print(mp_counter)
+    emotion_nr_coins = np.zeros(mp_counter)
+    emotion_certainty_coins = np.zeros(mp_counter)
     for i in range(mp_counter):
         try:
-            emotion_nr[i], emotion_certainty[i] = r[i].get()
+            emotion_nr_coins[i], emotion_certainty_coins[i] = r[i].get()
         except:
-            emotion_nr[i], emotion_certainty[i] = 0, 0
-
+            emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
     p.close()
     p.join()
 
     print(coin_times)
-    print(emotion_nr)
-    print(emotion_certainty)
+    print(emotion_nr_coins)
+    print(emotion_certainty_coins)
 
     utils.close_camera(cap)
+
+
+if __name__ == '__main__':
+    main()
