@@ -39,7 +39,6 @@ if __name__ == '__main__':
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         score = peg.assessRoutine(initImg, currImg, rectList)
 
-    # Test 2: The coin experiment
     roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
     results = vision_coin.run(3, roi_coords)
 
@@ -47,10 +46,82 @@ if __name__ == '__main__':
 
     # Start the experiment
 
+    # Initialize test 2: The coin experiment
+    roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
+    ref_n_frames = 3
+    sos_n_frames = 16
+    ssos_train = 5
+    ssos_thr_factor = 20
+    coin_thr = 60
+
+    roi_size = roi_coords[:, 1] - roi_coords[:, 0]
+    ssos_array = np.zeros(ssos_train)
+    reference = np.zeros(roi_size)
+    ref_frames = np.zeros((roi_size[0], roi_size[1], ref_n_frames))
+    sos_array = np.zeros(sos_n_frames)
+
+    roi_counter = 0
+    frame_counter = 0
+    ssos_train_counter = 0
+    coin_frame = -1000
+    ssos_thr = 0
+    coin_counter = 0
+
+    # Throw away the first frames
+    for i in range(20):
+        cap.read()
+
+    expRunning = True
     while expRunning:
-        # Start facial/behavioral analysis with 10 sec timer
+
         ret, frame = cap.read()
+        if not ret:
+            expRunning = False
+            continue
+
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Motion Tracking here...
+
+        # Detect coin in ROI
+        if frame_counter % 2 == 0:
+            # Get roi and blur
+            roi = img[roi_coords[0,0]:roi_coords[0,1], roi_coords[1,0]:roi_coords[1,1]]
+            roi = cv2.GaussianBlur(roi, (21, 21), 0)
+
+            # Get frame for reference and update reference if necessary
+            ref_frames[:,:, roi_counter % ref_n_frames] = roi
+            if roi_counter % ref_n_frames == ref_n_frames - 1:
+                reference = np.mean(ref_frames, axis=2)
+
+            # If a reference has been created and the last coin is some frames ago, compute SOS
+            if roi_counter >= ref_n_frames - 1 and frame_counter - coin_frame > coin_thr:
+                sos_array[roi_counter % sos_n_frames] = np.sum(np.square(roi - reference))
+
+                # If the SOS array is full, compute the average
+                if roi_counter % sos_n_frames == sos_n_frames - 1:
+                    ssos = np.sum(sos_array)
+                    if ssos_train_counter < ssos_train:
+                        ssos_array[ssos_train_counter] = ssos
+                        if ssos_train_counter == ssos_train - 1:
+                            ssos_thr = ssos_thr_factor * np.mean(ssos_array)
+                        ssos_train_counter = ssos_train_counter + 1
+                    else:
+                        if ssos > ssos_thr:
+                            coin_counter = coin_counter + 1
+                            print (coin_counter)
+                            if coin_counter == nCoins:
+                                expRunning = False
+                            sos_array = np.zeros(sos_n_frames)
+                            coin_frame = frame_counter
+
+            cv2.imshow('image', roi)
+            cv2.waitKey(1)
+            roi_counter = roi_counter + 1
+
         # Feed the image to sentiment analysis
 
-        expRunning = false
+        frame_counter = frame_counter + 1
+
+
+    cap.release()
