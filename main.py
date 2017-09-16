@@ -5,7 +5,7 @@ import pegboard as peg
 import utils
 import multiprocessing as mp
 
-DEBUG = True
+DEBUG = False
 
 nCoins = 3
 emotion_analysis_skip_frames = 10
@@ -38,8 +38,6 @@ def main():
 
     # 480, 640
     initImg = initImg[250:350, 230:470]
-    cv2.imshow('image', initImg)
-    # cv2.waitKey()
 
     rectList = peg.initPegboard(initImg.copy())
     expRunning = True

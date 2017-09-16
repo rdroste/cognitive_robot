@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 
 # Detect and store the coordinates of all the black rectangles
 #   Input: initImg, grayscale image
@@ -23,16 +24,15 @@ def initPegboard(initImg):
 
     for i in range(len(contours0)): #range(6):
         area = cv2.contourArea(contours0[i])
+        tempMat = initImg.copy()
         if (area > minArea) & (area < maxArea):
-            cv2.drawContours(initImg, contours0, i, color=255, thickness=-1)
+            cv2.drawContours(tempMat, contours0, i, color=255, thickness=-1)
 
             # Access the image pixels and create a 1D numpy array then add to list
-            pts = np.where(initImg == 255)
-            myList.append(pts)
+            pts = np.where(tempMat == 255)
+            tempMat = initImg.copy()
 
-            # x, y, w, h = cv2.boundingRect(contours0[i])
-            # myList.append((x, y, w, h))
-            #cv2.rectangle(initImg, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            myList.append(pts)
 
     cv2.imshow('image', initImg)
     return myList
@@ -44,11 +44,21 @@ def initPegboard(initImg):
 #   Output: List of rectangle coordinates of the pegboard hole positions
 def checkRectOccupancy(initImg, currImg, rect):
 
-    diffMat = initImg[rect] - currImg[rect]
-    return cv2.sumElems(diffMat*diffMat)[0]
+    diffMat = initImg[rect].astype(np.double) - currImg[rect].astype(np.double)
+    optMat = 255*np.ones((len(diffMat))) - initImg[rect].astype(np.double)
+    optScore = np.sum(np.square(optMat))/len(diffMat)
+    currScore = np.sum(np.square(diffMat))/len(diffMat)
+    if currScore/optScore > 0.3:
+        return 0.5*(currScore+optScore)/optScore
+    else:
+        return 0.0
 
 # Asses the routine
 def assessRoutine(initImg, currImg, rectList):
+    score = []
+    for i in range(6):
+        currScore = checkRectOccupancy(initImg, currImg, rectList[i])
 
-    score = checkRectOccupancy(initImg, currImg, rectList[2])
+        score.append(currScore)
+    print score
     return score
