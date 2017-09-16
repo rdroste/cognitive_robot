@@ -88,6 +88,7 @@ if __name__ == '__main__':
     coin_counter = 0
 
     init_time = time.time()
+    this_init_time = init_time
 
     # Throw away the first frames
     for i in range(20):
@@ -148,12 +149,15 @@ if __name__ == '__main__':
                             coin_frame = frame_counter
 
                             # Add timer
-                            coin_times[coin_counter - 1] = time.time() - init_time
+                            coin_times[coin_counter - 1] = time.time() - this_init_time
+                            this_init_time = time.time()
 
             if DEBUG:
                 cv2.imshow('image', img)
                 cv2.waitKey(120)
                 roi_counter = roi_counter + 1
+
+        print(coin_times)
 
         # Feed the image to sentiment analysis
 
