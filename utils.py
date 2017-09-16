@@ -10,7 +10,7 @@ def get_image(camera):
     return im
 
 # returns camera object
-def prepare_camera(port=0, prep_frames=30):
+def prepare_camera(port=1, prep_frames=30):
 
     camera = cv2.VideoCapture(port)
 

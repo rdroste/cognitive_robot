@@ -4,7 +4,7 @@ import os, time
 import pegboard as peg
 import utils
 
-DEBUG = True
+DEBUG = False
 
 nCoins = 3
 # emotion_key = os.environ['MICROSOFT_EMOTION']
