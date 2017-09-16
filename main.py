@@ -7,14 +7,14 @@ import vision_coin, utils
 DEBUG = True
 
 nCoins = 3
-emotion_key = os.environ['MICROSOFT_EMOTION']
+# emotion_key = os.environ['MICROSOFT_EMOTION']
 
 # Main routine
 if __name__ == '__main__':
 
     # Initialize all the connections with yumi and the camera
     if DEBUG:
-        cap = cv2.VideoCapture("peg.avi")
+        cap = cv2.VideoCapture("peg_test.avi")
     else:
         cap = utils.prepare_camera()
 
@@ -28,7 +28,14 @@ if __name__ == '__main__':
     # Initialize the pegboard
     ret, frame = cap.read()
     if ret:
+
         initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # 480, 640
+        initImg = initImg[250:350, 230:470]
+        cv2.imshow('image', initImg)
+        cv2.waitKey()
+
         rectList = peg.initPegboard(initImg.copy())
         expRunning = True
         # Yumi shows the pegboard routine
@@ -45,8 +52,10 @@ if __name__ == '__main__':
 
         # Evaluate the board
         ret, frame = cap.read()
+        frame = frame[250:350, 230:470]
         currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         score = peg.assessRoutine(initImg, currImg, rectList)
+
 
     roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
     # results = vision_coin.run(3, roi_coords)
