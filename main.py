@@ -3,6 +3,7 @@ import cv2
 import os, time
 import pegboard as peg
 import utils
+import multiprocessing as mp
 
 DEBUG = False
 
@@ -85,6 +86,7 @@ if __name__ == '__main__':
     asos_thr_factor = 5
     coin_thr = 20
     time_thr_coins = 20 # seconds
+    filepath = './image.png'
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
     asos_array = np.zeros(asos_train)
@@ -99,6 +101,11 @@ if __name__ == '__main__':
     coin_frame = -1000
     asos_thr = 0
     coin_counter = 0
+    emotions = []
+    p = mp.Pool()
+    mp_counter = 0
+    r = []
+    # r = p.apply_async(utils.get_emotion, args=(filepath, emotion_key))
 
     init_time = time.time()
     this_init_time = init_time
@@ -121,9 +128,13 @@ if __name__ == '__main__':
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Motion Tracking here...
-        # if frame_counter > 20 and frame_counter % 60:
-        #     utils.save_image(img, './tmp.png')
-        #     utils.get_emotion('./tmp.png', emotion_key)
+
+        # Emotion analysis
+        if frame_counter % 10 == 0:
+
+            utils.save_image(img)
+            r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
+            mp_counter = mp_counter + 1
 
         # Detect coin in ROI
         if frame_counter % 2 == 0:
@@ -170,10 +181,25 @@ if __name__ == '__main__':
                 cv2.waitKey(120)
                 roi_counter = roi_counter + 1
 
-        print(coin_times)
-
         # Feed the image to sentiment analysis
 
         frame_counter = frame_counter + 1
+
+    emotion_nr = np.zeros(mp_counter)
+    emotion_certainty = np.zeros(mp_counter)
+    # print("r is ", len(r))
+    # print(mp_counter)
+    for i in range(mp_counter):
+        try:
+            emotion_nr[i], emotion_certainty[i] = r[i].get()
+        except:
+            emotion_nr[i], emotion_certainty[i] = 0, 0
+
+    p.close()
+    p.join()
+
+    print(coin_times)
+    print(emotion_nr)
+    print(emotion_certainty)
 
     utils.close_camera(cap)
