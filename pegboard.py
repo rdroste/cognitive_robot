@@ -12,13 +12,14 @@ def initPegboard(initImg):
     myList = []
 
     # Everything higher than the threshold is set to white
-    threshold = 100
+    threshold = 150
+
     ret, thresh = cv2.threshold(initImg, threshold, 255, 0)
     _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Min and Max area for the rectangles
-    minArea = 1000.0
-    maxArea = 15000.0
+    minArea = 200.0
+    maxArea = 500.0
 
     for i in range(len(contours0)): #range(6):
         area = cv2.contourArea(contours0[i])
@@ -33,6 +34,8 @@ def initPegboard(initImg):
             # myList.append((x, y, w, h))
             #cv2.rectangle(initImg, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
+    cv2.imshow('image', initImg)
+    cv2.waitKey()
     return myList
 
 # Check if a rectangle is occupied by a peg
