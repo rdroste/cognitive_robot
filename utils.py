@@ -57,6 +57,7 @@ def get_emotion(filepath, api_key):
 
     # POS : anger, contempt, disgust, fear, sadness
     # NEG : happiness, neutral, surprise
+    print(json_data)
     emotions = json_data[0]['scores']
 
     # print(emotions)
