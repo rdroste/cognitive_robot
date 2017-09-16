@@ -73,7 +73,7 @@ if __name__ == '__main__':
     asos_thr_factor = 5
     coin_thr = 20
     time_thr_coins = 20 # seconds
-    filepath = './tmp.png'
+    filepath = './image.png'
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
     asos_array = np.zeros(asos_train)
@@ -117,25 +117,11 @@ if __name__ == '__main__':
         # Motion Tracking here...
 
         # Emotion analysis
-        if frame_counter % 20 == 0:
-            # if frame_counter > 0:
-            #     # s.join()
-            #     # p.join()
-            #     # p.close()
-            #     # r.close()
-            #     emotion_nr, emotion_certainty = r.get()
-            #
-            #     if emotion_nr:
-            #         print(emotion_nr)
-            #         print(emotion_certainty)
-            #         # cv2.waitKey()
+        if frame_counter % 10 == 0:
 
             utils.save_image(img)
-            # s = mp.Process(target=utils.get_emotion, args=(filepath, emotion_key))
-            # s.start()
             r.append(p.apply_async(utils.get_emotion, args=(filepath, emotion_key)))
             mp_counter = mp_counter + 1
-
 
         # Detect coin in ROI
         if frame_counter % 2 == 0:
@@ -188,13 +174,19 @@ if __name__ == '__main__':
 
     emotion_nr = np.zeros(mp_counter)
     emotion_certainty = np.zeros(mp_counter)
+    # print("r is ", len(r))
+    # print(mp_counter)
     for i in range(mp_counter):
-        emotion_nr[i], emotion_certainty[i] = r[i].get()
+        try:
+            emotion_nr[i], emotion_certainty[i] = r[i].get()
+        except:
+            emotion_nr[i], emotion_certainty[i] = 0, 0
 
     p.close()
     p.join()
 
     print(coin_times)
-
+    print(emotion_nr)
+    print(emotion_certainty)
 
     utils.close_camera(cap)
