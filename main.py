@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import pegboard as peg
+import vision_coin
 
 # Main routine
 if __name__ == '__main__':
@@ -39,6 +40,9 @@ if __name__ == '__main__':
         score = peg.assessRoutine(initImg, currImg, rectList)
 
     # Test 2: The coin experiment
+    roi_coords = np.array([[323, 472], [243, 411]]) # [[411, 243], [472, 323]] for coin_test_1.mp4
+    results = vision_coin.run(3, roi_coords)
+
     # Yumi explains the coin experiment
 
     # Start the experiment
