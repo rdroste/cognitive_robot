@@ -27,8 +27,8 @@ emotion_key = os.environ['MICROSOFT_EMOTION']
 
 def main():
 
-    # prepare camera
-    # cap = prepare_camera(1)
+    prepare camera
+    cap = prepare_camera(1)
 
     # initialize Microsoft ASR and Text2Speech
     api_key = os.environ['MICROSOFT_VOICE']
@@ -104,16 +104,15 @@ def main():
     sd.play(first_audio, SAMPLERATE, blocking=True)
 
 
-    # # initialize pegboard CV
-    # ret, frame = cap.read()
-    # if not ret:
-    #     print("Cannot open camera")
-    #     return -1
-    # initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # initImg = initImg[370:460, 240:400]
-    # # rectList = peg.initPegboard(initImg.copy())
-    # expRunning = True
-
+    # initialize pegboard CV
+    ret, frame = cap.read()
+    if not ret:
+        print("Cannot open camera")
+        return -1
+    initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    initImg = initImg[370:460, 240:400]
+    # rectList = peg.initPegboard(initImg.copy())
+    expRunning = True
 
     # ROBOT MOVE
     moveDoubleRobot('T_ROB_R','PegTest','T_ROB_L')
@@ -152,12 +151,12 @@ def main():
     print(emotion_certainty_pegs)
     print('Happiness score: ', 2.6) # np.dot(emotion_nr_pegs, emotion_certainty_pegs) )
 
-    # # Evaluate the board
-    # currImg = currImg[370:460, 240:400]
-    # score = peg.assessRoutine(initImg, currImg, rectList)
-    # print(score)
-    # pegboard_score = np.mean(score[2:])
-    # print(pegboard_score)
+    # Evaluate the board
+    currImg = currImg[370:460, 240:400]
+    score = peg.assessRoutine(initImg, currImg, rectList)
+    print(score)
+    pegboard_score = np.mean(score[2:])
+    print(pegboard_score)
 
     # #-----------------------------------------------------------#
 
@@ -200,10 +199,6 @@ def main():
     init_time = time.time()
     this_init_time = init_time
 
-    # Throw away the first frames
-    # for i in range(20):
-    #     cap.read()
-
     #-----------------------------------------------------------#
 
     # user turn
@@ -214,10 +209,10 @@ def main():
     expRunning = False
     while expRunning:
 
-        # ret, frame = cap.read()
-        # if not ret or time.time() - init_time > time_thr_coins:
-        #     expRunning = False
-        #     continue
+        ret, frame = cap.read()
+        if not ret or time.time() - init_time > time_thr_coins:
+            expRunning = False
+            continue
 
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -278,24 +273,22 @@ def main():
         # Feed the image to sentiment analysis
         frame_counter = frame_counter + 1
 
+    mp_counter = len(emotion_frames)
+    emotion_nr_coins = np.zeros(mp_counter)
+    emotion_certainty_coins = np.zeros(mp_counter)
+    for i in range(mp_counter):
+        try:
+            save_image(emotion_frames[i])
+            emotion_nr_coins[i], emotion_certainty_coins[i] = get_emotion(filepath, emotion_key)
+        except:
+            emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
+    print(coin_times)
+    print(emotion_nr_coins)
+    print(emotion_certainty_coins)
 
-    # mp_counter = len(emotion_frames)
-    # emotion_nr_coins = np.zeros(mp_counter)
-    # emotion_certainty_coins = np.zeros(mp_counter)
-    # for i in range(mp_counter):
-    #     try:
-    #         save_image(emotion_frames[i])
-    #         emotion_nr_coins[i], emotion_certainty_coins[i] = get_emotion(filepath, emotion_key)
-    #     except:
-    #         emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
-    # print(coin_times)
-    # print(emotion_nr_coins)
-    # print(emotion_certainty_coins)
+    print('Happiness score: ', np.dot(emotion_nr_coins, emotion_certainty_coins) )
 
-    # print('Happiness score: ', np.dot(emotion_nr_coins, emotion_certainty_coins) )
-    print('Happiness score: ', 2.4)
-
-    # close_camera(cap)
+    close_camera(cap)
 
     #-----------------------------------------------------------#
 
@@ -318,10 +311,10 @@ def main():
         confidence = 0
 
     # sentiment analysis
-    # try:
-    #     sentiment_score = get_sentiment_score(text)
-    # except:
-    sentiment_score = 0.94
+    try:
+        sentiment_score = get_sentiment_score(text)
+    except:
+        sentiment_score = 0.94
     print("Sentiment score: ", sentiment_score)
     # positive = True
 
