@@ -94,6 +94,8 @@ def get_sentiment_score(text):
     result = response.read()
     data = json.loads(result)
 
+    print(data)
+
     return data['documents'][0]['score']
 
 

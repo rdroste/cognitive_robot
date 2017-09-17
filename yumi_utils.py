@@ -4,7 +4,7 @@ from requests.auth import HTTPDigestAuth
 import urllib
 
 
-url = 'http://212.243.230.221/rw'
+url = 'http://172.20.0.224/rw'
 auth = HTTPDigestAuth('Default User', 'robotics')
 
 def moveSingleRobot(arm,action):
