@@ -5,7 +5,7 @@ import sounddevice as sd
 import soundfile as sf
 import os
 
-threshold = 180
+threshold = 185
 fail, _ = sf.read(os.path.join('audio','almost_there.wav'))
 # Detect and store the coordinates of all the black rectangles
 #   Input: initImg, grayscale image
@@ -20,8 +20,8 @@ def initPegboard(initImg):
     # Everything higher than the threshold is set to white
     ret, thresh = cv2.threshold(initImg, threshold, 255, 0)
     _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    #cv2.imshow('image', thresh)
-    #cv2.waitKey()
+    cv2.imshow('image', thresh)
+    cv2.waitKey()
     # Min and Max area for the rectangles
     minArea = 200.0
     maxArea = 600.0
@@ -56,12 +56,11 @@ def checkRectOccupancy(initImg, currImg, rect):
 
 # Asses the routine
 def assessRoutine(initImg, currImg, rectList):
-    score = []
-  #  for i in range(len(rectList)):
-  #      currScore = checkRectOccupancy(initImg, currImg, rectList[i])
-   #     score.append(currScore)
-        #if currScore < 0.2:
-    sd.play(fail, 16000, blocking=True)
-
+    score = np.zeros((len(rectList),1))
+    for i in range(len(rectList)):
+        score[i]=checkRectOccupancy(initImg, currImg, rectList[i])
+        if score[i] < 0.2:
+            # sd.play(fail, 16000, blocking=True)
+            break
 
     return score

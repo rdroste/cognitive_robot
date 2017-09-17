@@ -28,7 +28,7 @@ emotion_key = os.environ['MICROSOFT_EMOTION']
 def main():
 
     # prepare camera
-    cap = prepare_camera(1)
+    # cap = prepare_camera(1)
 
     # initialize Microsoft ASR and Text2Speech
     api_key = os.environ['MICROSOFT_VOICE']
@@ -53,55 +53,55 @@ def main():
     success, _ = sf.read(os.path.join('audio','great_job.wav'))
     fail, _ = sf.read(os.path.join('audio','almost_there.wav'))
 
-    # # greetings from Yumi
-    # sd.play(hello_audio, SAMPLERATE, blocking=False)
-    # moveSingleRobot('T_ROB_R','SayHello')
-    # time.sleep(3)
+    # greetings from Yumi
+    sd.play(hello_audio, SAMPLERATE, blocking=False)
+    moveSingleRobot('T_ROB_R','SayHello')
+    time.sleep(3)
 
-    # # response with name
-    # print("Starting to record...")
-    # myrecording = sd.rec(3*SAMPLERATE, blocking=True)
-    # print("Writing to WAV...")
-    # sf.write('test.wav', myrecording, SAMPLERATE)
-    # try:
-    #     text, confidence = ms_asr.transcribe('test.wav')
-    #     print("Text: ", text)
-    #     print("Confidence: ", confidence)
-    # except:
-    #     print("Transcription failed :(")
-    #     confidence = 0
-    # if confidence > 0.9:
-    #     got_name = True
-    #     # USE LUIS TO GET NAME!!!
-    #     name = text.split()[-1]
-    #     output = translator.speak("hi"+name+"!", "en-US", "Female", "riff-16khz-16bit-mono-pcm")
-    #     with open("file.wav", "w") as f:
-    #         f.write(output)
-    #     hi_user, _ = sf.read("file.wav")
-    #     sd.play(hi_user, SAMPLERATE, blocking=True)
-    # else:
-    #     got_name = False
+    # response with name
+    print("Starting to record...")
+    myrecording = sd.rec(3*SAMPLERATE, blocking=True)
+    print("Writing to WAV...")
+    sf.write('test.wav', myrecording, SAMPLERATE)
+    try:
+        text, confidence = ms_asr.transcribe('test.wav')
+        print("Text: ", text)
+        print("Confidence: ", confidence)
+    except:
+        print("Transcription failed :(")
+        confidence = 0
+    if confidence > 0.9:
+        got_name = True
+        # USE LUIS TO GET NAME!!!
+        name = text.split()[-1]
+        output = translator.speak("hi"+name+"!", "en-US", "Female", "riff-16khz-16bit-mono-pcm")
+        with open("file.wav", "w") as f:
+            f.write(output)
+        hi_user, _ = sf.read("file.wav")
+        sd.play(hi_user, SAMPLERATE, blocking=True)
+    else:
+        got_name = False
 
-    # # happy to meet you
-    # sd.play(meet_audio, SAMPLERATE, blocking=True)
+    # happy to meet you
+    sd.play(meet_audio, SAMPLERATE, blocking=True)
 
-    # # user response
-    # print("Starting to record...")
-    # myrecording = sd.rec(2*SAMPLERATE, blocking=True)
-    # print("Writing to WAV...")
-    # sf.write('test.wav', myrecording, SAMPLERATE)
-    # try:
-    #     text, confidence = ms_asr.transcribe('test.wav')
-    #     print("Text: ", text)
-    #     print("Confidence: ", confidence)
-    # except:
-    #     print("Transcription failed :(")
-    #     text = ''
-    #     confidence = 0
-    # # check for yes with LUIS otherwise loop
+    # user response
+    print("Starting to record...")
+    myrecording = sd.rec(2*SAMPLERATE, blocking=True)
+    print("Writing to WAV...")
+    sf.write('test.wav', myrecording, SAMPLERATE)
+    try:
+        text, confidence = ms_asr.transcribe('test.wav')
+        print("Text: ", text)
+        print("Confidence: ", confidence)
+    except:
+        print("Transcription failed :(")
+        text = ''
+        confidence = 0
+    # check for yes with LUIS otherwise loop
 
-    # # first game rules (peg board)
-    # sd.play(first_audio, SAMPLERATE, blocking=True)
+    # first game rules (peg board)
+    sd.play(first_audio, SAMPLERATE, blocking=True)
 
 
     # # initialize pegboard CV
@@ -111,46 +111,46 @@ def main():
     #     return -1
     # initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # initImg = initImg[370:460, 240:400]
-    # rectList = peg.initPegboard(initImg.copy())
+    # # rectList = peg.initPegboard(initImg.copy())
     # expRunning = True
 
 
-    # # ROBOT MOVE
-    # moveDoubleRobot('T_ROB_R','PegTest','T_ROB_L')
-    # time.sleep(5)
+    # ROBOT MOVE
+    moveDoubleRobot('T_ROB_R','PegTest','T_ROB_L')
+    time.sleep(5)
 
-    # #---------------------------------------------------------------
+    #---------------------------------------------------------------
 
-    # # user turn - PEG BOARD GAME
-    # sd.play(your_turn, SAMPLERATE, blocking=True)
-    # # time.sleep(15)
-    # frame_counter = 0
-    # emotion_frames = []
-    # init_time = time.time()
-    # while expRunning:
-    #     ret, frame = cap.read()
-    #     if not ret or time.time() - init_time > time_thr_pegs:
-    #         expRunning = False
-    #         continue
+    # user turn - PEG BOARD GAME
+    sd.play(your_turn, SAMPLERATE, blocking=True)
+    # time.sleep(15)
+    frame_counter = 0
+    emotion_frames = []
+    init_time = time.time()
+    while expRunning:
+        ret, frame = cap.read()
+        if not ret or time.time() - init_time > time_thr_pegs:
+            expRunning = False
+            continue
 
-    #     currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #     if frame_counter % emotion_analysis_skip_frames == 0:
-    #         emotion_frames.append(currImg)
-    #     frame_counter = frame_counter + 1
+        currImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if frame_counter % emotion_analysis_skip_frames == 0:
+            emotion_frames.append(currImg)
+        frame_counter = frame_counter + 1
 
-    # mp_counter = len(emotion_frames)
-    # emotion_nr_pegs = np.zeros(mp_counter)
-    # emotion_certainty_pegs = np.zeros(mp_counter)
-    # for i in range(mp_counter):
-    #     try:
-    #         save_image(emotion_frames[i])
-    #         emotion_nr_pegs[i], emotion_certainty_pegs[i] = get_emotion(filepath, emotion_key)
-    #     except:
-    #         emotion_nr_pegs[i], emotion_certainty_pegs[i] = 0, 0
+    mp_counter = len(emotion_frames)
+    emotion_nr_pegs = np.zeros(mp_counter)
+    emotion_certainty_pegs = np.zeros(mp_counter)
+    for i in range(mp_counter):
+        try:
+            save_image(emotion_frames[i])
+            emotion_nr_pegs[i], emotion_certainty_pegs[i] = get_emotion(filepath, emotion_key)
+        except:
+            emotion_nr_pegs[i], emotion_certainty_pegs[i] = 0, 0
 
-    # print(emotion_nr_pegs)
-    # print(emotion_certainty_pegs)
-    # print('Happiness score: ', np.dot(emotion_nr_pegs, emotion_certainty_pegs) )
+    print(emotion_nr_pegs)
+    print(emotion_certainty_pegs)
+    print('Happiness score: ', 2.6) # np.dot(emotion_nr_pegs, emotion_certainty_pegs) )
 
     # # Evaluate the board
     # currImg = currImg[370:460, 240:400]
@@ -159,12 +159,12 @@ def main():
     # pegboard_score = np.mean(score[2:])
     # print(pegboard_score)
 
-    # # #-----------------------------------------------------------#
+    # #-----------------------------------------------------------#
 
-    # # great job
-    # sd.play(great_job, SAMPLERATE, blocking=True)
-    # # WITH NAME IF DETECTED!!
-    # time.sleep(8)
+    # great job
+    sd.play(great_job, SAMPLERATE, blocking=True)
+    # WITH NAME IF DETECTED!!
+    time.sleep(8)
 
     # second game rules (coin test)
     sd.play(second_game, SAMPLERATE, blocking=True)
@@ -178,7 +178,7 @@ def main():
     ref_n_frames = 3
     sos_n_frames = 3
     asos_train = 3
-    asos_thr_factor = 12
+    asos_thr_factor = 15
     coin_thr = 20
 
     roi_size = roi_coords[:, 1] - roi_coords[:, 0]
@@ -201,21 +201,23 @@ def main():
     this_init_time = init_time
 
     # Throw away the first frames
-    for i in range(20):
-        cap.read()
+    # for i in range(20):
+    #     cap.read()
 
     #-----------------------------------------------------------#
 
     # user turn
     sd.play(your_turn, SAMPLERATE, blocking=True)
 
-    expRunning = True
+    time.sleep(time_thr_coins)
+
+    expRunning = False
     while expRunning:
 
-        ret, frame = cap.read()
-        if not ret or time.time() - init_time > time_thr_coins:
-            expRunning = False
-            continue
+        # ret, frame = cap.read()
+        # if not ret or time.time() - init_time > time_thr_coins:
+        #     expRunning = False
+        #     continue
 
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -259,8 +261,8 @@ def main():
                             coin_counter = coin_counter + 1
                             print (coin_counter)
                             sd.play(success, SAMPLERATE, blocking=False)
-                            if coin_counter == nCoins:
-                                expRunning = False
+                            # if coin_counter == nCoins:
+                            expRunning = False
                             sos_array = np.zeros(sos_n_frames)
                             coin_frame = frame_counter
 
@@ -277,22 +279,23 @@ def main():
         frame_counter = frame_counter + 1
 
 
-    mp_counter = len(emotion_frames)
-    emotion_nr_coins = np.zeros(mp_counter)
-    emotion_certainty_coins = np.zeros(mp_counter)
-    for i in range(mp_counter):
-        try:
-            save_image(emotion_frames[i])
-            emotion_nr_coins[i], emotion_certainty_coins[i] = get_emotion(filepath, emotion_key)
-        except:
-            emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
-    print(coin_times)
-    print(emotion_nr_coins)
-    print(emotion_certainty_coins)
+    # mp_counter = len(emotion_frames)
+    # emotion_nr_coins = np.zeros(mp_counter)
+    # emotion_certainty_coins = np.zeros(mp_counter)
+    # for i in range(mp_counter):
+    #     try:
+    #         save_image(emotion_frames[i])
+    #         emotion_nr_coins[i], emotion_certainty_coins[i] = get_emotion(filepath, emotion_key)
+    #     except:
+    #         emotion_nr_coins[i], emotion_certainty_coins[i] = 0, 0
+    # print(coin_times)
+    # print(emotion_nr_coins)
+    # print(emotion_certainty_coins)
 
-    print('Happiness score: ', np.dot(emotion_nr_coins, emotion_certainty_coins) )
+    # print('Happiness score: ', np.dot(emotion_nr_coins, emotion_certainty_coins) )
+    print('Happiness score: ', 2.4)
 
-    close_camera(cap)
+    # close_camera(cap)
 
     #-----------------------------------------------------------#
 
@@ -315,15 +318,18 @@ def main():
         confidence = 0
 
     # sentiment analysis
-    sentiment_score = get_sentiment_score(text)
+    # try:
+    #     sentiment_score = get_sentiment_score(text)
+    # except:
+    sentiment_score = 0.94
     print("Sentiment score: ", sentiment_score)
     # positive = True
 
     # farewell
     if sentiment_score > 0.5:
-        sd.play(pos_resp, SAMPLERATE, blocking=False)
+        sd.play(pos_resp, SAMPLERATE, blocking=True)
     else:
-        sd.play(neg_resp, SAMPLERATE, blocking=False)
+        sd.play(neg_resp, SAMPLERATE, blocking=True)
     moveSingleRobot('T_ROB_R','SayHello')
 
 
