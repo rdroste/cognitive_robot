@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import math
 
-threshold = 150
+threshold = 180
 # Detect and store the coordinates of all the black rectangles
 #   Input: initImg, grayscale image
 #   Output: List of rectangle coordinates of the pegboard hole positions
@@ -16,7 +16,8 @@ def initPegboard(initImg):
     # Everything higher than the threshold is set to white
     ret, thresh = cv2.threshold(initImg, threshold, 255, 0)
     _, contours0, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+    cv2.imshow('image', thresh)
+    cv2.waitKey()
     # Min and Max area for the rectangles
     minArea = 200.0
     maxArea = 500.0

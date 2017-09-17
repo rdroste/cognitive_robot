@@ -5,14 +5,14 @@ import pegboard as peg
 import utils
 import multiprocessing as mp
 
-DEBUG = True
+DEBUG = False
 
 time_thr_pegs = 20
 time_thr_coins = 20 # seconds
 nCoins = 3
 emotion_analysis_skip_frames = 20
 filepath = './image.png'
-emotion_key = os.environ['MICROSOFT_EMOTION']
+emotion_key = "cd52fc8f72bd4b84bff1d409d9782ea6"#os.environ['MICROSOFT_EMOTION']
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
     initImg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # 480, 640
-    initImg = initImg[250:350, 230:470]
+    initImg = initImg[370:460, 240:400]
 
     rectList = peg.initPegboard(initImg.copy())
     expRunning = True
@@ -80,7 +80,7 @@ def main():
     print(emotion_certainty_pegs)
 
     # Evaluate the board
-    currImg = currImg[250:350, 230:470]
+    currImg = currImg[370:460, 240:400]
     score = peg.assessRoutine(initImg, currImg, rectList)
     print(score)
 
@@ -95,7 +95,7 @@ def main():
 
     # Initialize test 2: The coin experiment
     # roi_coords = np.array([[323, 472], [243, 411]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
-    roi_coords = np.array([[282, 349], [219, 282]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
+    roi_coords = np.array([[320, 450], [150, 232]])  # [[411, 243], [472, 323]] for coin_test_1.mp4
     ref_n_frames = 2
     sos_n_frames = 4
     asos_train = 4
