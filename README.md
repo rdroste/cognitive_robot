@@ -11,8 +11,8 @@ The JRED team set out to combine a high-tech robot with state-of-the-art compute
 
 Our tests are inspired by standart test, such as the ABC test<sup>2</sup> and the Purdue Pegboard Test<sup>3</sup>
 
-<sub><sup>1 https://canchild.ca/en/diagnoses/developmental-coordination-disorder</sup></sub>
-<sub><sup>2 http://www.rehabmeasures.org/Lists/RehabMeasures/DispForm.aspx?ID=1144</sup></sub>
+<sub><sup>1 https://canchild.ca/en/diagnoses/developmental-coordination-disorder</sup></sub>  
+<sub><sup>2 http://www.rehabmeasures.org/Lists/RehabMeasures/DispForm.aspx?ID=1144</sup></sub>  
 <sub><sup>3 http://www.pearsonclinical.com/therapy/products/100000433/movement-assessment-battery-for-children-second-edition-movement-abc-2.html</sup></sub>
 
 ## The Tech
