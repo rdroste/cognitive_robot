@@ -2,6 +2,9 @@
 
 Cognitive robot to diagnose disorders of motor skills and coordination in children
 
+## How To Use It
+`voice_interface_v3.py` is the main file running the diagnosis routine.
+
 ## Inspiration
 Many children suffer from Developmental Coordination Disorder (DCD), a motor skill disorder that affects 5 to 6% of all school aged children<sup>1</sup>. The affected children have difficulties performing everyday tasks and therefore suffer from significant impairment of their quality of life. However, DCD is difficult to diagnose since, by definition, it is not linked to any identifiable medical of neurological disorders. Therefore, designing accurate methods for diagnosing the disorders are crucial.
 
