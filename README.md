@@ -2,6 +2,9 @@
 
 Cognitive robot to diagnose disorders of motor skills and coordination in children
 
+Developed at the [HackZurich2017](http://hackzurich.com/).
+Check it out on Devpost [here](https://devpost.com/software/jred?ref_content=existing_user_added_to_software_team&ref_feature=portfolio&ref_medium=email&utm_campaign=software&utm_content=added_to_software_team&utm_medium=email&utm_source=transactional#app-team).
+
 ## How To Use It
 `voice_interface_v3.py` is the main file running the diagnosis routine.
 
